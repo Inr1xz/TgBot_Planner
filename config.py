@@ -1,22 +1,21 @@
 # Единая точка входа для всех настроек проекта 
 # Загружает переменные окружения из .env и передает их в кол
 
-from pydantic import BaseSettings 
-from dotenv import load_dotenv 
+# config.py
+import os
+from dotenv import load_dotenv
 
-# Загружаем переменные окружения из .env 
+# Загрузить переменные из .env
 load_dotenv()
 
-# Описываем нужные переменные
-class Settings(BaseSettings):
-    BOT_TOKEN: str
-    DATABASE_URL: str 
+# Просто читаем нужные переменные
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Указываем откуда брать переменные, чтобы это работало в любой среде
-    class Config:
-        env_file = ".env"
-        env_file_encording = "utf-8"
+# Проверим, что ничего не забыли
+if not BOT_TOKEN:
+    raise ValueError("Переменная BOT_TOKEN не найдена в .env")
 
-# Создаем объект из которого будем брать
-settings = Settings()
+if not DATABASE_URL:
+    raise ValueError("Переменная DATABASE_URL не найдена в .env")
 

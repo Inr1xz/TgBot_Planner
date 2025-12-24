@@ -1,10 +1,15 @@
 # Python
 __pycache__/
 *.pyc
-.env
-.venv
-venv/
+*.pyo
 
-# IDE
+# Виртуальные окружения
+venv/
+.env
+.env.*
+*.sqlite3
+*.db
+
+# IDE/редакторы
 .idea/
 .vscode/
