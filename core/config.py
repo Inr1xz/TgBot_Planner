@@ -1,11 +1,10 @@
 # Единая точка входа для всех настроек проекта 
 # Загружает переменные окружения из .env и передает их в кол
 
-# config.py
 import os
 from dotenv import load_dotenv
 
-# Загрузить переменные из .env
+# Загрузить переменные из .env в os.environ
 load_dotenv()
 
 # Просто читаем нужные переменные
@@ -19,3 +18,4 @@ if not BOT_TOKEN:
 if not DATABASE_URL:
     raise ValueError("Переменная DATABASE_URL не найдена в .env")
 
+API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"

@@ -1,52 +1,39 @@
-# main.py
-import httpx
 import time
-import os
-from dotenv import load_dotenv
-
-# Загружаем токен из .env и форматируем базовый URL, к которому будем обращаться 
-load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+from bot.api import get_updates, send_messsage
 
 # Нужно, чтобы не обрабатывать ожно и то же сообщение повторно, читаем только новые, двигая offset вперед
 offset = 0  
 
-# Делаем get-запрос к Telegram API 
-def get_updates():
-    global offset
-    response = httpx.get(f"{API_URL}/getUpdates", params={"timeout": 30, "offset": offset})
-    result = response.json()
-    if result["ok"]:
-        return result["result"]
-    return []
-
-# Отправляем сообщение пользователю
-def send_message(chat_id, text):
-    httpx.post(f"{API_URL}/sendMessage", data={"chat_id": chat_id, "text": text})
-
 # Бесконченый цикл бота 
 def main():
     print("Бот запущен...")
+    # Объявляем offset глобальным, потому что мы будем его изменять внутри функции
+    global offset
+
     while True:
-        updates = get_updates()
+        # Получаем список обновлений из Telegram API
+        updates = get_updates(offset)
+        # Извлекаем текстовое сообщение.
         for update in updates:
             message = update.get("message")
             if not message:
                 continue
 
+            # Получаем:
+            # chat_id — ID чата (кому писать)
+            # text — текст сообщения пользователя
             chat_id = message["chat"]["id"]
             text = message.get("text", "")
 
+            #если пользователь прислал /start, бот говорит "Привет!" иначе — отражает сообщение
             if text == "/start":
-                send_message(chat_id, "Привет!")
+                send_messsage(chat_id, "Привет")
             else:
-                send_message(chat_id, f"Ты написал: {text}")
+                send_messsage(chat_id, f"Ты написал: {text}")
 
-            # Обновляем offset, чтобы не получать одно и то же сообщение снова
-            global offset
-            offset = update["update_id"] + 1
-
+            #Telegram присваивает каждому обновлению update_id. Мы прибавляем +1, чтобы не получать это обновление снова
+            offset = update["update_id"] + 1 
+        
         time.sleep(1)
 
 
