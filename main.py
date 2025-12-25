@@ -1,5 +1,6 @@
 import time
 from bot.api import get_updates, send_messsage
+from bot.handlers import handle_message
 
 # Нужно, чтобы не обрабатывать ожно и то же сообщение повторно, читаем только новые, двигая offset вперед
 offset = 0  
@@ -15,23 +16,8 @@ def main():
         updates = get_updates(offset)
         # Извлекаем текстовое сообщение.
         for update in updates:
-            message = update.get("message")
-            if not message:
-                continue
-
-            # Получаем:
-            # chat_id — ID чата (кому писать)
-            # text — текст сообщения пользователя
-            chat_id = message["chat"]["id"]
-            text = message.get("text", "")
-
-            #если пользователь прислал /start, бот говорит "Привет!" иначе — отражает сообщение
-            if text == "/start":
-                send_messsage(chat_id, "Привет")
-            else:
-                send_messsage(chat_id, f"Ты написал: {text}")
-
-            #Telegram присваивает каждому обновлению update_id. Мы прибавляем +1, чтобы не получать это обновление снова
+            handle_message(update)
+        #Telegram присваивает каждому обновлению update_id. Мы прибавляем +1, чтобы не получать это обновление снова
             offset = update["update_id"] + 1 
         
         time.sleep(1)
