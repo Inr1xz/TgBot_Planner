@@ -65,3 +65,15 @@ def mark_task_done(task_id: int):
         task.is_done = True 
         session.commit()
     session.close()
+
+def delete_task(user_id, task_id):
+    session = Session()
+    task = session.query(Task).filter_by(id=task_id, user_id=user_id).first()
+    if task:
+        session.delete(task)
+        session.commit()
+        result = True
+    else:
+        result = False
+    session.close()
+    return result

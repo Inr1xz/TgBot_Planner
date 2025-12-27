@@ -1,5 +1,6 @@
 from bot.api import send_message
-from db import add_task, get_tasks, mark_task_done
+from db import add_task, get_tasks, mark_task_done, delete_task
+
 
 def handle_message(update: dict):
     # Обрабатываем одно обновление (сообщение от пользователя)
@@ -48,6 +49,17 @@ def handle_message(update: dict):
             send_message(chat_id, "Задача отмечена как выполненная.")
         except(IndexError, ValueError):
             send_message(chat_id, "Укажи ID задачи")
+    elif text.startswith("/delete"):
+        parts = text.split(maxsplit=1)
+        if len(parts) == 2 and parts[1].isdigit():
+            task_id = int(parts[1])
+            success = delete_task(chat_id, task_id)
+            if success:
+                send_message(chat_id, f"Задача #{task_id} удалена")
+            else:
+                send_message(chat_id, f"Задача #{task_id} не найдена")
+        else:
+            send_message(chat_id, "Используйте формат: /delete <id>")
     # Во всех остальных случаях отправляем пользователю его же сообщение
     else:
         send_message(chat_id, f"Ты написал:  {text}")
