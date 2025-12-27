@@ -3,7 +3,7 @@ from bot.api import send_messsage
 def handle_message(update: dict):
     # Обрабатываем одно обновление (сообщение от пользователя)
 
-    message = update.get("massage")
+    message = update.get("message")
     if not message:
         return
     

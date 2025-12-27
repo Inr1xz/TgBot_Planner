@@ -14,7 +14,7 @@ def get_updates(offset):
     return[]
 
 # Отправляем сообщение пользователю
-def send_messsage(chat_id, text):
+def send_message(chat_id, text):
     # POST-запрос на метод /sendMessage Telegram API. Параметры:
     # chat_id — куда отправлять
     # text — что отправлять
