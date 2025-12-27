@@ -6,12 +6,8 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 # sessionmaker - создает фабрику сессий для взаимодействия с базой (добавление, удаление, запросы)
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
+from config import DATABASE_URL
 
-# Cоздем движок подключения к SQLite - база будет хранится в planner.db
-# echo = True - логирует все SQL - запросы в консоль
-engine = create_engine("sqlite://planner.db", echo=True)
-# Создаем фабрику сессий для взаимодейтсвия с базой через созданный движок
-SessionLocal = sessionmaker(bind=engine)
 # Создаем базовый класс, от которого будут наследоваться все модели таблиц
 Base = declarative_base()
 
@@ -19,17 +15,41 @@ Base = declarative_base()
 class Task(Base):
     # Указываем имя таблицы в базе данных
     __tablename__ = "tasks"
-    # Поле id: Integet - тип данных, primary_key=True - деляет это поле уникальным индетефикатором записи, index=True - создает индекс, ускоряющий поиск по этому полю
-    id = Column(Integer, primary_key=True, index=True)
-    # Поле user_id: хранит идентификатор пользователя Telegram, index=True - также индексируется для быстрого поиска
-    user_id = Column(Integer, index=True)
+    # Поле id: Integet - тип данных, primary_key=True - деляет это поле уникальным индетефикатором записи
+    id = Column(Integer, primary_key=True)
+    # Поле user_id: хранит идентификатор пользователя Telegram
+    user_id = Column(Integer, nullable=False)
     # Поле description: текстовое описсание задачи, nullable=False - обязательное значение
     descriprion = Column(String, nullable=False)
-    # Хранит дату и время выполнения задачи
-    due_date = Column(DateTime, default=datetime.utcnow)
+    # Поле done: булевое значение отслеживает выполнено ли или нет
+    is_done = Column(Boolean, default=False)
 
-# Функция инициализации базы данных
-def init_db():
+
+
+# Cоздем движок подключения к SQLite - база будет хранится в planner.db
+engine = create_engine(DATABASE_URL)
+# Создаем фабрику сессий для взаимодейтсвия с базой через созданный движок
+Session = sessionmaker(bind=engine)
 # Создает все таблицы в базе, описанные через Base. Если planner.db не существует он будет создан
-    Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(engine)
 
+def add_task(user_id: int, descriprion: str):
+    session = Session()
+    task = Task(user_id=user_id, descriprion=descriprion)
+    session.add(task)
+    session.commit()
+    session.close()
+
+def get_tasks(user_id: int):
+    session = Session()
+    tasks = session.query(Task).filter_by(user_id=user_id).all()
+    session.close()
+    return tasks
+
+def mark_task_done(task_id: int):
+    session = Session()
+    task = session.query(Task).filter_by(id=task_id).first()
+    if task:
+        task.is_done = True 
+        session.commit()
+    session.close()
