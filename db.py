@@ -6,7 +6,8 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 # sessionmaker - создает фабрику сессий для взаимодействия с базой (добавление, удаление, запросы)
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
-from config import DATABASE_URL
+from core.config import DATABASE_URL
+from sqlalchemy import Boolean
 
 # Создаем базовый класс, от которого будут наследоваться все модели таблиц
 Base = declarative_base()
@@ -20,9 +21,9 @@ class Task(Base):
     # Поле user_id: хранит идентификатор пользователя Telegram
     user_id = Column(Integer, nullable=False)
     # Поле description: текстовое описсание задачи, nullable=False - обязательное значение
-    descriprion = Column(String, nullable=False)
+    description = Column(String, nullable=False)
     # Поле done: булевое значение отслеживает выполнено ли или нет
-    is_done = Column(bool, default=False)
+    is_done = Column(Boolean, default=False)
 
 
 
@@ -31,14 +32,14 @@ engine = create_engine(DATABASE_URL)
 # Создаем фабрику сессий для взаимодейтсвия с базой через созданный движок
 Session = sessionmaker(bind=engine)
 # Создает все таблицы в базе, описанные через Base. Если planner.db не существует он будет создан
-Base.metadata.create_all(engine)
+Base.metadata.create_all(bind=engine)
 
 # Добавляет новую задачу от пользователя в БД
-def add_task(user_id: int, descriprion: str):
+def add_task(user_id: int, description: str):
     # Создаем сессию подключения к БД
     session = Session()
     # Создаем объект задачи
-    task = Task(user_id=user_id, descriprion=descriprion)
+    task = Task(user_id=user_id, description=description)
     # Добавляем задачу в БД
     session.add(task)
     # Сохраняем изменения 

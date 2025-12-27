@@ -1,5 +1,5 @@
 import time
-from bot.api import get_updates, send_messsage
+from bot.api import get_updates, send_message
 from bot.handlers import handle_message
 
 # Нужно, чтобы не обрабатывать ожно и то же сообщение повторно, читаем только новые, двигая offset вперед

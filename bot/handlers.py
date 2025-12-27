@@ -1,4 +1,4 @@
-from api import send_messsage
+from bot.api import send_message
 from db import add_task, get_tasks, mark_task_done
 
 def handle_message(update: dict):
@@ -11,25 +11,25 @@ def handle_message(update: dict):
     # Получаем:
     # chat_id — ID чата (кому писать)
     # text — текст сообщения пользователя
-    chat_id = message["chat_id"]["id"]
+    chat_id = message["chat"]["id"]
     text = message.get("text", "")
 
     # Если пользователь прислал /start, бот говорит "Привет!"
     if text == "/start":
-        send_messsage(chat_id, "Привет! Я бот-планировщик. Напиши /add, /list, /done <id>.")
-    elif text.startswitch("/add"):
+        send_message(chat_id, "Привет! Я бот-планировщик. Напиши /add, /list, /done <id>.")
+    elif text.startswith("/add"):
         # Удаляем команду /add и пробелы - получаем текст задачи
         task_text = text[4:].strip()
         if not task_text:
-            send_messsage(chat_id, "Укажи описание задачи после /add.")
+            send_message(chat_id, "Укажи описание задачи после /add.")
         else:
             add_task(chat_id, task_text)
-            send_messsage(chat_id, "Задача добавлена.")
+            send_message(chat_id, "Задача добавлена.")
     elif text == "/list":
         # Получаем все задачи пользователя
-        tasks == get_tasks(chat_id)
+        tasks = get_tasks(chat_id)
         if not tasks:
-            send_messsage(chat_id, "У тебя нет задач.")
+            send_message(chat_id, "У тебя нет задач.")
         else:
             # t.id - числовой индефикатор задачи
             # t.discription - текст задачи
@@ -38,16 +38,16 @@ def handle_message(update: dict):
             reply = "\n".join(
                 f"{t.id}. {'Готово: ' if t.is_done else 'Не готово: '} {t.description}" for t in tasks
             )
-            send_messsage(chat_id, reply)
-    elif text.startswitch("/done"):
+            send_message(chat_id, reply)
+    elif text.startswith("/done"):
         try:
             # Берем число после команды 
             task_id = int(text.split()[1])
             # Отмечаем задачу как выполненную
             mark_task_done(task_id)
-            send_messsage(chat_id, "Задача отмечена как выполненная.")
+            send_message(chat_id, "Задача отмечена как выполненная.")
         except(IndexError, ValueError):
-            send_messsage(chat_id, "Укажи ID задачи")
+            send_message(chat_id, "Укажи ID задачи")
     # Во всех остальных случаях отправляем пользователю его же сообщение
     else:
-        send_messsage(chat_id, f"Ты написал:  {text}")
+        send_message(chat_id, f"Ты написал:  {text}")

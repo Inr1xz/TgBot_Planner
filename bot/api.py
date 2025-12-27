@@ -5,8 +5,7 @@ from core.config import API_URL
 def get_updates(offset):
     # Делаем GET-запрос с параметрами: 
     # offset — чтобы не получать старые сообщения
-    # timeout=30 — long-polling: сервер Telegram будет "висеть" до 30 сек, пока не придёт новое сообщение
-    response = httpx.get(f"API_URL/getUpdates", params = {"timeout": 30, "offset": offset})
+    response = httpx.get(f"{API_URL}/getUpdates", params={"offset": offset})
     # Получаем JSON-ответ и преобразуем в Python-словарь
     result = response.json()
     if result["ok"]:
