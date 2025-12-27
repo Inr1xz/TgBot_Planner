@@ -22,7 +22,7 @@ class Task(Base):
     # Поле description: текстовое описсание задачи, nullable=False - обязательное значение
     descriprion = Column(String, nullable=False)
     # Поле done: булевое значение отслеживает выполнено ли или нет
-    is_done = Column(Boolean, default=False)
+    is_done = Column(bool, default=False)
 
 
 
@@ -33,23 +33,34 @@ Session = sessionmaker(bind=engine)
 # Создает все таблицы в базе, описанные через Base. Если planner.db не существует он будет создан
 Base.metadata.create_all(engine)
 
+# Добавляет новую задачу от пользователя в БД
 def add_task(user_id: int, descriprion: str):
+    # Создаем сессию подключения к БД
     session = Session()
+    # Создаем объект задачи
     task = Task(user_id=user_id, descriprion=descriprion)
+    # Добавляем задачу в БД
     session.add(task)
+    # Сохраняем изменения 
     session.commit()
+    # Закрываем сессию
     session.close()
 
+# Возвращаем все задачи конкретного пользователя
 def get_tasks(user_id: int):
     session = Session()
+    # Ищем задачу по ID
     tasks = session.query(Task).filter_by(user_id=user_id).all()
     session.close()
+    # Возвращаем список задач
     return tasks
 
+# Помечаем задачу как выполненную по ID
 def mark_task_done(task_id: int):
     session = Session()
     task = session.query(Task).filter_by(id=task_id).first()
     if task:
+        # Помечаем задачу как выполненную
         task.is_done = True 
         session.commit()
     session.close()
