@@ -1,6 +1,12 @@
 from bot.api import send_message
 from db import add_task, get_tasks, mark_task_done, delete_task, edit_task
+from telegram import InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
+from telegram_bot_calendar import DetailedTelegramCalendar
+from datetime import datetime, timedelta
 
+
+add_steps = {}
 
 def handle_message(update: dict):
     # Обрабатываем одно обновление (сообщение от пользователя)
@@ -15,23 +21,53 @@ def handle_message(update: dict):
     chat_id = message["chat"]["id"]
     text = message.get("text", "")
 
+    if chat_id in add_steps:
+        step = add_steps[chat_id]["step"]
+
+        if step == "desc":
+            step = add_steps[chat_id]["step"]
+
+            if step == "decs":
+                add_steps[chat_id]["desc"] = text
+                add_steps[chat_id]["step"] = "priority"
+                send_message(chat_id, "Укажи приоритет (1-5):")
+            
+            elif step == "priority":
+                if text.isdigit() and 1 <= int(text) <= 5:
+                    add_steps[chat_id]["priority"] = int(text)
+                    add_steps[chat_id]["step"] = "date"
+                    send_message(chat_id, "Укажи дату в формате ГГГГ-ММ-ДД")
+                else:
+                    send_message(chat_id, "Приоритет должен быть числом от 1 до 5")
+            
+            elif step == "date":
+                try:
+                    date = datetime.strptime(text, "%Y-%m-%d").date
+                    add_steps[chat_id]["date"] = date
+                    add_steps[chat_id]["step"] = "time"
+                    send_message(chat_id, "Укажи время в формате ЧЧ:ММ:")
+                except ValueError:
+                    send_message(chat_id, "Неверный формат. Введите дату как ГГГГ-ММ-ДД")
+
+            elif step == "time":
+                try:
+                    time = datetime.strptime(text, "%H:%M").time()
+                    data = add_steps.pop(chat_id)
+                    due_datetime = datetime.combine(data["date"], time)
+                    add_task(chat_id, data["desc"], data["priority"], due_datetime)
+                    send_message(chat_id, f"Задача добавлена на {due_datetime.strftime('%Y-%m-%d %H:%M')}")
+                except ValueError:
+                    send_message(chat_id, "Неверный формат. Введи время как ЧЧ:ММ")
+            return
+
+
     # Если пользователь прислал /start, бот говорит "Привет!"
     if text == "/start":
         send_message(chat_id, "Привет! Я бот-планировщик")
 
     elif text.startswith("/add"):
-        parts = text.split(maxsplit=2)
-        if len(parts) >= 3 and parts[1].isdigit():
-            priority = int(parts[1])
-            if 1 <= priority <= 5:
-                description = parts[2]
-                add_task(chat_id, description, priority)
-                send_message(chat_id, f"Добавлена задача с приоритетом {priority}: {description}")
-            else:
-                send_message(chat_id, "Приоритет должен быть от 1 до 5")
-        else:
-            send_message(chat_id, "Используйте формат: /add <priority 1-5> <задача>")
-
+        add_steps[chat_id] = {"step": "desc"}
+        send_message(chat_id, "Введите описание задачи:")
 
 
     elif text == "/list":
@@ -43,7 +79,8 @@ def handle_message(update: dict):
             msg_lines = []
             for task in tasks:
                 status = "Выполнено" if task.done else "Не выполнено"
-                msg_lines.append(f"{task.id}. {status} [{task.priority}] {task.description}")
+                due = task.due_date.strftime("%Y-%m-%d %H:%M") if task.due_date else "Без даты"
+                msg_lines.append(f"{task.id}. {status} [{task.priority}] {task.description} ({due})")
             send_message(chat_id, "\n".join(msg_lines))
 
     elif text.startswith("/done"):
@@ -98,7 +135,7 @@ def handle_message(update: dict):
         )
         send_message(chat_id, help_text)
 
-
     # Во всех остальных случаях отправляем пользователю
     else:
         send_message(chat_id, "Неизвестная команда. Напищите /help для списка команд.")
+
