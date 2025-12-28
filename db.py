@@ -66,6 +66,7 @@ def mark_task_done(task_id: int):
         session.commit()
     session.close()
 
+# Удаляем задачу из списка
 def delete_task(user_id, task_id):
     session = Session()
     task = session.query(Task).filter_by(id=task_id, user_id=user_id).first()

@@ -50,8 +50,11 @@ def handle_message(update: dict):
         except(IndexError, ValueError):
             send_message(chat_id, "Укажи ID задачи")
     elif text.startswith("/delete"):
+        # Разделяем текст про пробелу [0] - команда /delete [1] - ID задачи
         parts = text.split(maxsplit=1)
+        # Провеляем что есть вторая часть и что она состоит из цифры
         if len(parts) == 2 and parts[1].isdigit():
+            # Преобразуем ID из строки в инт
             task_id = int(parts[1])
             success = delete_task(chat_id, task_id)
             if success:
