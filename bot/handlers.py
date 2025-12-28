@@ -17,16 +17,22 @@ def handle_message(update: dict):
 
     # Если пользователь прислал /start, бот говорит "Привет!"
     if text == "/start":
-        send_message(chat_id, "Привет! Я бот-планировщик. Напиши /add, /list, /done <id>.")
+        send_message(chat_id, "Привет! Я бот-планировщик")
 
     elif text.startswith("/add"):
-        # Удаляем команду /add и пробелы - получаем текст задачи
-        task_text = text[4:].strip()
-        if not task_text:
-            send_message(chat_id, "Укажи описание задачи после /add.")
+        parts = text.split(maxsplit=2)
+        if len(parts) >= 3 and parts[1].isdigit():
+            priority = int(parts[1])
+            if 1 <= priority <= 5:
+                description = parts[2]
+                add_task(chat_id, description, priority)
+                send_message(chat_id, f"Добавлена задача с приоритетом {priority}: {description}")
+            else:
+                send_message(chat_id, "Приоритет должен быть от 1 до 5")
         else:
-            add_task(chat_id, task_text)
-            send_message(chat_id, "Задача добавлена.")
+            send_message(chat_id, "Используйте формат: /add <priority 1-5> <задача>")
+
+
 
     elif text == "/list":
         # Получаем все задачи пользователя
@@ -34,24 +40,24 @@ def handle_message(update: dict):
         if not tasks:
             send_message(chat_id, "У тебя нет задач.")
         else:
-            # t.id - числовой индефикатор задачи
-            # t.discription - текст задачи
-            # t.is_dine - булевое значение выполнена задача или нет
-            # Отправляем пользователю собранный список задач '\n.join' объединяет все строки в один многострочный текст раздляя симполом переноса
-            reply = "\n".join(
-                f"{t.id}. {'Готово: ' if t.is_done else 'Не готово: '} {t.description}" for t in tasks
-            )
-            send_message(chat_id, reply)
+            msg_lines = []
+            for task in tasks:
+                status = "Выполнено" if task.done else "Не выполнено"
+                msg_lines.append(f"{task.id}. {status} [{task.priority}] {task.description}")
+            send_message(chat_id, "\n".join(msg_lines))
 
     elif text.startswith("/done"):
-        try:
-            # Берем число после команды 
-            task_id = int(text.split()[1])
-            # Отмечаем задачу как выполненную
-            mark_task_done(task_id)
-            send_message(chat_id, "Задача отмечена как выполненная.")
-        except(IndexError, ValueError):
-            send_message(chat_id, "Укажи ID задачи")
+        parts = text.split(maxsplit=1)
+        if len(parts) == 2 and parts[1].isdigit():
+            task_id = int(parts[1])
+            success = mark_task_done(chat_id, task_id)
+            if success:
+                send_message(chat_id, f"Задача #{task_id} отмечена как выполненная")
+            else:
+                send_message(chat_id, f"Задача #{task_id} не найдена")
+        else:
+            send_message(chat_id, "Используйте формат: /done <id>")
+
 
     elif text.startswith("/delete"):
         # Разделяем текст про пробелу [0] - команда /delete [1] - ID задачи
@@ -93,6 +99,6 @@ def handle_message(update: dict):
         send_message(chat_id, help_text)
 
 
-    # Во всех остальных случаях отправляем пользователю его же сообщение
+    # Во всех остальных случаях отправляем пользователю
     else:
-        send_message(chat_id, f"Ты написал:  {text}")
+        send_message(chat_id, "Неизвестная команда. Напищите /help для списка команд.")

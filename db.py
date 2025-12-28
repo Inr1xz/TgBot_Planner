@@ -24,6 +24,8 @@ class Task(Base):
     description = Column(String, nullable=False)
     # Поле done: булевое значение отслеживает выполнено ли или нет
     is_done = Column(Boolean, default=False)
+    # Поле priority: приоритет задачам по умолчанию 3
+    priority = Column(Integer, default=3)
 
 
 
@@ -35,11 +37,11 @@ Session = sessionmaker(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # Добавляет новую задачу от пользователя в БД
-def add_task(user_id: int, description: str):
+def add_task(user_id: int, description: str, priority: int):
     # Создаем сессию подключения к БД
     session = Session()
     # Создаем объект задачи
-    task = Task(user_id=user_id, description=description)
+    task = Task(user_id=user_id, description=description, priority=priority)
     # Добавляем задачу в БД
     session.add(task)
     # Сохраняем изменения 
@@ -51,20 +53,24 @@ def add_task(user_id: int, description: str):
 def get_tasks(user_id: int):
     session = Session()
     # Ищем задачу по ID
-    tasks = session.query(Task).filter_by(user_id=user_id).all()
+    tasks = session.query(Task).filter_by(user_id=user_id).order_by(Task.priority).all()
     session.close()
     # Возвращаем список задач
     return tasks
 
 # Помечаем задачу как выполненную по ID
-def mark_task_done(task_id: int):
+def mark_task_done(user_id: int, task_id: int):
     session = Session()
-    task = session.query(Task).filter_by(id=task_id).first()
+    task = session.query(Task).filter_by(id=task_id, user_id=user_id).first()
     if task:
         # Помечаем задачу как выполненную
         task.is_done = True 
         session.commit()
+        result = True
+    else:
+        result = False
     session.close()
+    return result
 
 # Удаляем задачу из списка
 def delete_task(user_id, task_id):
