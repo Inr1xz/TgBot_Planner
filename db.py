@@ -26,6 +26,8 @@ class Task(Base):
     is_done = Column(Boolean, default=False)
     # Поле priority: приоритет задачам по умолчанию 3
     priority = Column(Integer, default=3)
+    # Поле due_date: для хранения даты и времени выполнения задачи
+    due_date = Column(DateTime, nullable=True)
 
 
 
@@ -37,11 +39,11 @@ Session = sessionmaker(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 # Добавляет новую задачу от пользователя в БД
-def add_task(user_id: int, description: str, priority: int):
+def add_task(user_id: int, description: str, priority: int, due_date=None):
     # Создаем сессию подключения к БД
     session = Session()
     # Создаем объект задачи
-    task = Task(user_id=user_id, description=description, priority=priority)
+    task = Task(user_id=user_id, description=description, priority=priority, due_date=due_date)
     # Добавляем задачу в БД
     session.add(task)
     # Сохраняем изменения 
@@ -88,7 +90,7 @@ def delete_task(user_id, task_id):
 # Отредактировать задачу из списка 
 def edit_task(user_id, task_id, new_description):
     session = Session()
-    task = session.query(Task).filter_by(id=task_id, user_id=user_id).first
+    task = session.query(Task).filter_by(id=task_id, user_id=user_id).first()
     if task:
         task.description = new_description
         session.commit()
