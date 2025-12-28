@@ -78,3 +78,16 @@ def delete_task(user_id, task_id):
         result = False
     session.close()
     return result
+
+# Отредактировать задачу из списка 
+def edit_task(user_id, task_id, new_description):
+    session = Session()
+    task = session.query(Task).filter_by(id=task_id, user_id=user_id).first
+    if task:
+        task.description = new_description
+        session.commit()
+        result = True
+    else:
+        result = False
+    session.close()
+    return result
